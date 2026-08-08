@@ -48,13 +48,13 @@ const createLiveUserDotIcon = (heading = null) => {
   });
 };
 
-// Component to force Leaflet map size recalculation on mount and resize
+// Component to force Leaflet map size recalculation on mount and window resize
 function MapResizer() {
   const map = useMap();
   useEffect(() => {
     const timer = setTimeout(() => {
       map.invalidateSize();
-    }, 250);
+    }, 200);
 
     const handleResize = () => {
       map.invalidateSize();
@@ -173,7 +173,7 @@ export function MapView() {
     startTracking();
   }, [startTracking]);
 
-  // Immediately zoom in to user standing position on initial acquisition
+  // Immediately fly to user standing position on initial acquisition
   useEffect(() => {
     if (location && typeof location.latitude === 'number' && typeof location.longitude === 'number') {
       const { latitude, longitude } = location;
@@ -365,12 +365,14 @@ export function MapView() {
     ? Number(rawDist).toFixed(1)
     : null;
 
-  const initialMapCenter = location 
-    ? [location.latitude, location.longitude] 
-    : GHANA_CENTER;
+  // Safe fixed initial center (Independent of GPS load state)
+  const initialMapCenter = GHANA_CENTER;
 
   return (
-    <div className="relative w-full h-[calc(100vh-64px)] min-h-[500px] z-0 bg-slate-950">
+    <div 
+      className="relative w-full z-0 bg-slate-950 overflow-hidden" 
+      style={{ height: 'calc(100vh - 64px)', minHeight: '550px' }}
+    >
       {/* Search Bar Container */}
       <div 
         className="absolute top-4 left-1/2 -translate-x-1/2 z-[2000] w-[92%] max-w-md pointer-events-auto"
@@ -615,8 +617,8 @@ export function MapView() {
 
       <MapContainer
         center={initialMapCenter}
-        zoom={location ? 17 : 16}
-        className="w-full h-full"
+        zoom={8}
+        style={{ height: '100%', width: '100%' }}
         zoomControl={false}
       >
         <MapResizer />
