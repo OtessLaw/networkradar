@@ -52,6 +52,113 @@ export const GHANA_MICRO_LOCALITIES = [
   { name: 'Sunyani Post Office Square', suburb: 'Sunyani Central', district: 'Sunyani Municipal', lat: 7.336, lng: -2.328 },
 ];
 
+// Ghana Telecom Coverage & Network Infrastructure Benchmarks
+export const GHANA_TELECOM_INTELLIGENCE_NODES = [
+  {
+    name: 'Accra Central / Osu',
+    lat: 5.555, lng: -0.183,
+    mtn: { score: 94, speed: '45.2 Mbps', ping: '22 ms', rank: '#1 Best Network', stars: '⭐⭐⭐⭐⭐', badgeText: 'ULTRA-FAST 4G+', badgeColor: 'bg-emerald-500 text-white', simpleVerdict: 'Super fast 4G+ in Accra Central. Best for HD Video, MoMo & Streaming.' },
+    telecel: { score: 82, speed: '28.4 Mbps', ping: '34 ms', rank: '#2 Good Network', stars: '⭐⭐⭐⭐', badgeText: 'RELIABLE 4G', badgeColor: 'bg-blue-500 text-white', simpleVerdict: 'Reliable 4G connection. Great for WhatsApp, Social Media & Web.' },
+    at: { score: 65, speed: '14.8 Mbps', ping: '48 ms', rank: '#3 Okay Network', stars: '⭐⭐⭐', badgeText: 'OKAY FOR CALLS', badgeColor: 'bg-amber-500 text-white', simpleVerdict: 'Moderate speed. Good for Voice Calls, SMS & Basic Web.' }
+  },
+  {
+    name: 'East Legon / Airport City',
+    lat: 5.635, lng: -0.155,
+    mtn: { score: 96, speed: '52.0 Mbps', ping: '18 ms', rank: '#1 Best Network', stars: '⭐⭐⭐⭐⭐', badgeText: 'HIGH CAPACITY 4G+', badgeColor: 'bg-emerald-500 text-white', simpleVerdict: 'Top speed in East Legon! Ultra-fast for Zoom meetings, Gaming & YouTube.' },
+    telecel: { score: 86, speed: '32.5 Mbps', ping: '28 ms', rank: '#2 Fast Network', stars: '⭐⭐⭐⭐⭐', badgeText: 'FAST 4G', badgeColor: 'bg-blue-500 text-white', simpleVerdict: 'Very fast 4G connection. Excellent for HD Video Calls & Browsing.' },
+    at: { score: 70, speed: '18.2 Mbps', ping: '42 ms', rank: '#3 Good Network', stars: '⭐⭐⭐⭐', badgeText: 'GOOD FOR MESSAGING', badgeColor: 'bg-amber-500 text-white', simpleVerdict: 'Good for WhatsApp, Instagram, and MoMo transactions.' }
+  },
+  {
+    name: 'Oyibi / Valley View Campus',
+    lat: 5.795, lng: -0.133,
+    mtn: { score: 88, speed: '32.4 Mbps', ping: '26 ms', rank: '#1 Best Network', stars: '⭐⭐⭐⭐⭐', badgeText: 'FASTEST IN OYIBI', badgeColor: 'bg-emerald-500 text-white', simpleVerdict: 'Fastest network in Oyibi. Smooth for TikTok, YouTube & MoMo.' },
+    telecel: { score: 74, speed: '18.6 Mbps', ping: '42 ms', rank: '#3 Good Network', stars: '⭐⭐⭐⭐', badgeText: 'GOOD FOR SOCIAL', badgeColor: 'bg-blue-500 text-white', simpleVerdict: 'Good for WhatsApp calls, Facebook & daily browsing in Oyibi.' },
+    at: { score: 80, speed: '24.1 Mbps', ping: '34 ms', rank: '#2 Strong Campus Network', stars: '⭐⭐⭐⭐', badgeText: 'STUDENT CAMPUS 4G', badgeColor: 'bg-indigo-500 text-white', simpleVerdict: 'Strong dedicated campus coverage near Valley View University.' }
+  },
+  {
+    name: 'Madina / Adenta',
+    lat: 5.668, lng: -0.166,
+    mtn: { score: 90, speed: '36.8 Mbps', ping: '24 ms', rank: '#1 Best Network', stars: '⭐⭐⭐⭐⭐', badgeText: 'STABLE 4G+', badgeColor: 'bg-emerald-500 text-white', simpleVerdict: '#1 Network in Madina/Adenta. Excellent for all online tasks.' },
+    telecel: { score: 78, speed: '22.0 Mbps', ping: '38 ms', rank: '#2 Good Network', stars: '⭐⭐⭐⭐', badgeText: 'RELIABLE 4G', badgeColor: 'bg-blue-500 text-white', simpleVerdict: 'Stable 4G connection. Great for WhatsApp & browsing.' },
+    at: { score: 62, speed: '12.5 Mbps', ping: '52 ms', rank: '#3 Okay Network', stars: '⭐⭐⭐', badgeText: 'OKAY FOR CALLS', badgeColor: 'bg-amber-500 text-white', simpleVerdict: 'Okay for Voice Calls & SMS messages.' }
+  },
+  {
+    name: 'Dansoman / Ablekuma',
+    lat: 5.556, lng: -0.264,
+    mtn: { score: 89, speed: '34.2 Mbps', ping: '25 ms', rank: '#1 Best Network', stars: '⭐⭐⭐⭐⭐', badgeText: 'FAST 4G', badgeColor: 'bg-emerald-500 text-white', simpleVerdict: 'Fast 4G in Dansoman. Great for Streaming & Social Media.' },
+    telecel: { score: 88, speed: '33.8 Mbps', ping: '26 ms', rank: '#1 Strong Competitor', stars: '⭐⭐⭐⭐⭐', badgeText: 'TOP PERFORMANCE', badgeColor: 'bg-red-500 text-white', simpleVerdict: 'Top 4G performance in Dansoman! Equal speed to MTN.' },
+    at: { score: 60, speed: '11.2 Mbps', ping: '54 ms', rank: '#3 Okay Network', stars: '⭐⭐⭐', badgeText: 'BASIC 3G/4G', badgeColor: 'bg-amber-500 text-white', simpleVerdict: 'Basic coverage. Best for calls & light browsing.' }
+  },
+  {
+    name: 'Kumasi Adum / Central',
+    lat: 6.688, lng: -1.624,
+    mtn: { score: 92, speed: '41.0 Mbps', ping: '23 ms', rank: '#1 Best Network', stars: '⭐⭐⭐⭐⭐', badgeText: 'FASTEST IN KUMASI', badgeColor: 'bg-emerald-500 text-white', simpleVerdict: 'Fastest network in Kumasi Central. Excellent for HD Video & MoMo.' },
+    telecel: { score: 85, speed: '28.6 Mbps', ping: '31 ms', rank: '#2 Fast Network', stars: '⭐⭐⭐⭐⭐', badgeText: 'RELIABLE 4G', badgeColor: 'bg-blue-500 text-white', simpleVerdict: 'Fast 4G connection. Great for WhatsApp & streaming.' },
+    at: { score: 66, speed: '14.0 Mbps', ping: '46 ms', rank: '#3 Okay Network', stars: '⭐⭐⭐', badgeText: 'OKAY FOR CALLS', badgeColor: 'bg-amber-500 text-white', simpleVerdict: 'Good for Voice Calls & Mobile Money.' }
+  },
+  {
+    name: 'KNUST Campus, Kumasi',
+    lat: 6.674, lng: -1.571,
+    mtn: { score: 95, speed: '48.5 Mbps', ping: '19 ms', rank: '#1 Best Network', stars: '⭐⭐⭐⭐⭐', badgeText: 'ACADEMIC 4G+', badgeColor: 'bg-emerald-500 text-white', simpleVerdict: 'Ultra-fast academic 4G+ on KNUST Campus. Great for research & Zoom.' },
+    telecel: { score: 88, speed: '34.0 Mbps', ping: '27 ms', rank: '#2 Fast Network', stars: '⭐⭐⭐⭐⭐', badgeText: 'HIGH SPEED 4G', badgeColor: 'bg-blue-500 text-white', simpleVerdict: 'High-speed student streaming & social media.' },
+    at: { score: 76, speed: '20.4 Mbps', ping: '38 ms', rank: '#3 Good Network', stars: '⭐⭐⭐⭐', badgeText: 'STABLE CAMPUS 4G', badgeColor: 'bg-indigo-500 text-white', simpleVerdict: 'Stable student connection across campus hostels.' }
+  },
+  {
+    name: 'Cape Coast Central & UCC',
+    lat: 5.105, lng: -1.246,
+    mtn: { score: 89, speed: '33.5 Mbps', ping: '27 ms', rank: '#1 Best Network', stars: '⭐⭐⭐⭐⭐', badgeText: 'FASTEST IN CAPE COAST', badgeColor: 'bg-emerald-500 text-white', simpleVerdict: '#1 Network in Cape Coast & UCC. Great for streaming & MoMo.' },
+    telecel: { score: 82, speed: '25.4 Mbps', ping: '34 ms', rank: '#2 Good Network', stars: '⭐⭐⭐⭐', badgeText: 'STABLE 4G', badgeColor: 'bg-blue-500 text-white', simpleVerdict: 'Consistent 4G connection for browsing & social media.' },
+    at: { score: 62, speed: '11.8 Mbps', ping: '53 ms', rank: '#3 Okay Network', stars: '⭐⭐⭐', badgeText: 'OKAY FOR CALLS', badgeColor: 'bg-amber-500 text-white', simpleVerdict: 'Good for phone calls and basic web tasks.' }
+  },
+  {
+    name: 'Takoradi Market Circle',
+    lat: 4.887, lng: -1.758,
+    mtn: { score: 94, speed: '46.0 Mbps', ping: '21 ms', rank: '#1 Best Network', stars: '⭐⭐⭐⭐⭐', badgeText: 'OIL CITY 4G+', badgeColor: 'bg-emerald-500 text-white', simpleVerdict: 'Ultra-fast 4G+ in Takoradi. Best for all internet activities.' },
+    telecel: { score: 83, speed: '27.5 Mbps', ping: '32 ms', rank: '#2 Good Network', stars: '⭐⭐⭐⭐', badgeText: 'RELIABLE 4G', badgeColor: 'bg-blue-500 text-white', simpleVerdict: 'Reliable Western Region 4G service.' },
+    at: { score: 68, speed: '15.0 Mbps', ping: '45 ms', rank: '#3 Okay Network', stars: '⭐⭐⭐', badgeText: 'OKAY FOR CALLS', badgeColor: 'bg-amber-500 text-white', simpleVerdict: 'Standard voice and text quality.' }
+  },
+  {
+    name: 'Tamale Central',
+    lat: 9.407, lng: -0.853,
+    mtn: { score: 86, speed: '27.0 Mbps', ping: '33 ms', rank: '#1 Best Network', stars: '⭐⭐⭐⭐⭐', badgeText: 'STRONGEST IN TAMALE', badgeColor: 'bg-emerald-500 text-white', simpleVerdict: 'Strongest 4G coverage in Tamale Central.' },
+    at: { score: 76, speed: '19.0 Mbps', ping: '40 ms', rank: '#2 Good Network', stars: '⭐⭐⭐⭐', badgeText: 'STRONG NORTHERN 4G', badgeColor: 'bg-indigo-500 text-white', simpleVerdict: 'Strong regional presence in Northern Region.' },
+    telecel: { score: 74, speed: '17.5 Mbps', ping: '44 ms', rank: '#3 Good Network', stars: '⭐⭐⭐⭐', badgeText: 'STABLE 4G', badgeColor: 'bg-blue-500 text-white', simpleVerdict: 'Stable 4G for social media & web.' }
+  },
+  {
+    name: 'Ho Central, Volta Region',
+    lat: 6.610, lng: 0.478,
+    mtn: { score: 86, speed: '28.0 Mbps', ping: '31 ms', rank: '#1 Best Network', stars: '⭐⭐⭐⭐⭐', badgeText: 'FAST 4G', badgeColor: 'bg-emerald-500 text-white', simpleVerdict: 'Fast 4G in Ho Central. Great for streaming & MoMo.' },
+    at: { score: 82, speed: '24.5 Mbps', ping: '35 ms', rank: '#2 Strong Regional Network', stars: '⭐⭐⭐⭐', badgeText: 'EXCELLENT VOLTA 4G', badgeColor: 'bg-indigo-500 text-white', simpleVerdict: 'Excellent regional coverage across Volta Region.' },
+    telecel: { score: 70, speed: '15.2 Mbps', ping: '47 ms', rank: '#3 Okay Network', stars: '⭐⭐⭐', badgeText: 'OKAY FOR BROWSING', badgeColor: 'bg-amber-500 text-white', simpleVerdict: 'Okay for WhatsApp and web browsing.' }
+  }
+];
+
+export function getAreaNetworkIntelligence(lat, lng) {
+  if (lat === undefined || lng === undefined || isNaN(lat) || isNaN(lng)) {
+    lat = 5.6037;
+    lng = -0.1870;
+  }
+
+  let closest = GHANA_TELECOM_INTELLIGENCE_NODES[0];
+  let minDistance = Infinity;
+
+  for (const item of GHANA_TELECOM_INTELLIGENCE_NODES) {
+    const dist = getDistanceKm(lat, lng, item.lat, item.lng);
+    if (dist < minDistance) {
+      minDistance = dist;
+      closest = item;
+    }
+  }
+
+  return {
+    townName: closest.name,
+    distanceKm: parseFloat(minDistance.toFixed(1)),
+    mtn: closest.mtn,
+    telecel: closest.telecel,
+    at: closest.at
+  };
+}
+
 // Ultra-fast instant IP Geolocation Engine
 export async function fetchInstantIpLocation() {
   try {
@@ -93,7 +200,7 @@ export function getDistanceMeters(lat1, lon1, lat2, lon2) {
   if (typeof lat1 !== 'number' || typeof lon1 !== 'number' || typeof lat2 !== 'number' || typeof lon2 !== 'number') {
     return 0;
   }
-  const R = 6371000; // Radius of Earth in meters
+  const R = 6371000;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a =

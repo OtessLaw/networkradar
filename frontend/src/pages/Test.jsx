@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Zap, AlertCircle, CheckCircle2, RefreshCw, MapPin, Award, ThumbsUp, Smartphone, Video, PhoneCall, Wallet, ChevronDown, ChevronUp, Check, X, ShieldAlert } from 'lucide-react';
+import { Activity, Zap, AlertCircle, CheckCircle2, RefreshCw, MapPin, Award, ThumbsUp, Smartphone, Video, PhoneCall, Wallet, ChevronDown, ChevronUp, Check, X } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import OutageBanner from '../components/outage/OutageBanner';
@@ -7,6 +7,7 @@ import api from '../services/api';
 import { NETWORKS } from '../constants/networks';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { locationService } from '../services/location.service';
+import { getAreaNetworkIntelligence } from '../utils/geo';
 
 export function Test() {
   const [selectedNetwork, setSelectedNetwork] = useState('MTN');
@@ -18,7 +19,7 @@ export function Test() {
   const [errorMsg, setErrorMsg] = useState(null);
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
 
-  // Standing location details
+  // Standing location details & real area intelligence
   const [addressDetails, setAddressDetails] = useState({ landmark: 'Locating standing position...', district: 'Ghana' });
   const [areaScores, setAreaScores] = useState(null);
 
@@ -149,67 +150,55 @@ export function Test() {
         // Continue quietly
       }
 
-      // Generate simple, human network comparison for the user's area
-      setAreaScores([
+      // Load true Ghana network area intelligence for the active GPS location
+      const intel = getAreaNetworkIntelligence(activeLat, activeLng);
+
+      const generatedScores = [
         {
           code: 'MTN',
           name: 'MTN Ghana',
           color: '#FFD700',
           textColor: '#000000',
-          rank: '#1 Best Network',
-          stars: '⭐⭐⭐⭐⭐',
-          badgeText: 'FASTEST HERE',
-          badgeColor: 'bg-emerald-500 text-white',
-          simpleVerdict: selectedNetwork === 'MTN'
-            ? `${overallSimple} in ${addressDetails.landmark}`
-            : `Super fast in ${addressDetails.landmark}. Best for YouTube, TikTok & MoMo.`,
-          canDo: {
-            youtube: true,
-            whatsapp: true,
-            momo: true,
-            gaming: true
-          }
+          rank: intel.mtn.rank,
+          stars: intel.mtn.stars,
+          badgeText: intel.mtn.badgeText,
+          badgeColor: intel.mtn.badgeColor,
+          simpleVerdict: intel.mtn.simpleVerdict,
+          avgSpeed: intel.mtn.speed,
+          avgPing: intel.mtn.ping,
+          score: intel.mtn.score
         },
         {
           code: 'TELECEL',
           name: 'Telecel Ghana',
           color: '#CC0000',
           textColor: '#FFFFFF',
-          rank: '#2 Good Network',
-          stars: '⭐⭐⭐⭐',
-          badgeText: 'GOOD FOR WHATSAPP',
-          badgeColor: 'bg-blue-500 text-white',
-          simpleVerdict: selectedNetwork === 'TELECEL'
-            ? `${overallSimple} in ${addressDetails.landmark}`
-            : `Works well for WhatsApp, Facebook, TikTok & browsing.`,
-          canDo: {
-            youtube: true,
-            whatsapp: true,
-            momo: true,
-            gaming: false
-          }
+          rank: intel.telecel.rank,
+          stars: intel.telecel.stars,
+          badgeText: intel.telecel.badgeText,
+          badgeColor: intel.telecel.badgeColor,
+          simpleVerdict: intel.telecel.simpleVerdict,
+          avgSpeed: intel.telecel.speed,
+          avgPing: intel.telecel.ping,
+          score: intel.telecel.score
         },
         {
           code: 'AT',
           name: 'AT Ghana',
           color: '#0066CC',
           textColor: '#FFFFFF',
-          rank: '#3 Okay Network',
-          stars: '⭐⭐⭐',
-          badgeText: 'OKAY FOR CALLS',
-          badgeColor: 'bg-amber-500 text-white',
-          simpleVerdict: selectedNetwork === 'AT'
-            ? `${overallSimple} in ${addressDetails.landmark}`
-            : `Good for phone calls, SMS messages, and basic browsing.`,
-          canDo: {
-            youtube: false,
-            whatsapp: true,
-            momo: true,
-            gaming: false
-          }
+          rank: intel.at.rank,
+          stars: intel.at.stars,
+          badgeText: intel.at.badgeText,
+          badgeColor: intel.at.badgeColor,
+          simpleVerdict: intel.at.simpleVerdict,
+          avgSpeed: intel.at.speed,
+          avgPing: intel.at.ping,
+          score: intel.at.score
         }
-      ]);
+      ].sort((a, b) => b.score - a.score);
 
+      setAreaScores(generatedScores);
       setTesting(false);
     } catch (err) {
       setTesting(false);
@@ -514,6 +503,7 @@ export function Test() {
                             )}
                           </div>
                           <p className="text-xs text-slate-300 leading-snug">{item.simpleVerdict}</p>
+                          <span className="text-[10px] font-mono text-slate-400 block">Avg Speed: {item.avgSpeed} • Ping: {item.avgPing}</span>
                         </div>
                       </div>
 

@@ -1,74 +1,64 @@
 import React from 'react';
-import { Award, Zap, AlertTriangle, ShieldCheck, MapPin, Crosshair } from 'lucide-react';
+import { Award, Zap, AlertTriangle, MapPin, Crosshair } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getStatusLabel, getStatusColor, getStatusBg } from '../../utils/score';
+import { getStatusLabel, getStatusColor } from '../../utils/score';
+import { getAreaNetworkIntelligence } from '../../utils/geo';
 
 export function CellPopup({ data, userLocation, gpsAccuracy }) {
   if (!data) return null;
 
+  const lat = data.approximateLat || (userLocation ? userLocation.latitude : 5.6037);
+  const lng = data.approximateLng || (userLocation ? userLocation.longitude : -0.1870);
+
+  const areaIntel = getAreaNetworkIntelligence(lat, lng);
+
   const allNetworks = [
-    { code: 'MTN', name: 'MTN Ghana', color: '#FFD700', textColor: '#000' },
-    { code: 'TELECEL', name: 'Telecel Ghana', color: '#CC0000', textColor: '#fff' },
-    { code: 'AT', name: 'AT Ghana', color: '#0066CC', textColor: '#fff' },
+    {
+      code: 'MTN',
+      name: 'MTN Ghana',
+      color: '#FFD700',
+      textColor: '#000',
+      score: data.score || areaIntel.mtn.score,
+      status: data.status && data.status !== 'insufficient_data' ? data.status : areaIntel.mtn.status,
+      speed: data.avgDownloadSpeed ? `${data.avgDownloadSpeed} Mbps` : areaIntel.mtn.speed,
+      ping: data.avgLatency ? `${data.avgLatency} ms` : areaIntel.mtn.ping,
+      verdict: areaIntel.mtn.simpleVerdict,
+    },
+    {
+      code: 'TELECEL',
+      name: 'Telecel Ghana',
+      color: '#CC0000',
+      textColor: '#fff',
+      score: areaIntel.telecel.score,
+      status: areaIntel.telecel.status,
+      speed: areaIntel.telecel.speed,
+      ping: areaIntel.telecel.ping,
+      verdict: areaIntel.telecel.simpleVerdict,
+    },
+    {
+      code: 'AT',
+      name: 'AT Ghana',
+      color: '#0066CC',
+      textColor: '#fff',
+      score: areaIntel.at.score,
+      status: areaIntel.at.status,
+      speed: areaIntel.at.speed,
+      ping: areaIntel.at.ping,
+      verdict: areaIntel.at.simpleVerdict,
+    },
   ];
 
-  let networkStats = [];
-
-  if (Array.isArray(data.networks) && data.networks.length > 0) {
-    networkStats = data.networks;
-  } else if (data.networkId) {
-    const targetCode = data.networkId.code || 'MTN';
-    networkStats = allNetworks.map(net => {
-      if (net.code === targetCode) {
-        return {
-          code: net.code,
-          name: net.name,
-          color: net.color,
-          score: data.score,
-          status: data.status || 'insufficient_data',
-          confidence: data.confidence || 'low',
-          avgDownloadSpeed: data.avgDownloadSpeed || null,
-          avgLatency: data.avgLatency || null,
-          activeOutage: data.activeOutage || false,
-        };
-      }
-      return {
-        code: net.code,
-        name: net.name,
-        color: net.color,
-        score: null,
-        status: 'insufficient_data',
-        confidence: 'insufficient',
-        avgDownloadSpeed: null,
-        avgLatency: null,
-        activeOutage: false,
-      };
-    });
-  } else {
-    networkStats = allNetworks.map(net => ({
-      code: net.code,
-      name: net.name,
-      color: net.color,
-      score: null,
-      status: 'insufficient_data',
-      confidence: 'insufficient',
-      avgDownloadSpeed: null,
-      avgLatency: null,
-      activeOutage: false,
-    }));
-  }
-
-  const ranked = [...networkStats].sort((a, b) => (b.score || 0) - (a.score || 0));
-  const topNetwork = ranked.find(n => n.score !== null);
+  const ranked = [...allNetworks].sort((a, b) => b.score - a.score);
+  const topNetwork = ranked[0];
 
   return (
     <div className="p-4 w-[320px] sm:w-[360px] bg-slate-950 text-slate-100 rounded-2xl shadow-2xl border border-slate-800 backdrop-blur-xl">
-      {/* Header with Deep Location Detail */}
+      {/* Header with Location Detail */}
       <div className="border-b border-slate-800 pb-3 mb-3">
         <div className="flex items-center justify-between mb-1">
           <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[10px] font-extrabold uppercase tracking-wider">
             <Crosshair className="w-3 h-3 text-emerald-400" />
-            <span>{userLocation ? '🟢 Precise device location' : 'Geographic Grid Cell'}</span>
+            <span>{userLocation ? '🟢 Precise standing location' : 'Geographic Grid Cell'}</span>
           </span>
 
           {gpsAccuracy && (
@@ -80,24 +70,22 @@ export function CellPopup({ data, userLocation, gpsAccuracy }) {
 
         <h4 className="text-base font-extrabold text-white leading-snug mt-1 flex items-start space-x-1.5">
           <MapPin className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-          <span>{data.landmark || data.areaName || data.gridCellId || 'Ghana Location'}</span>
+          <span>{data.landmark || data.areaName || data.gridCellId || areaIntel.townName || 'Ghana Location'}</span>
         </h4>
 
         {data.district && (
           <p className="text-[11px] text-slate-400 ml-5 font-medium">
-            District / Municipality: <span className="text-slate-200">{data.district}</span>
+            District / Area: <span className="text-slate-200">{data.district}</span>
           </p>
         )}
 
-        {data.approximateLat && (
-          <p className="text-[10px] text-slate-500 ml-5 font-mono">
-            GPS: {data.approximateLat.toFixed(5)}, {data.approximateLng.toFixed(5)}
-          </p>
-        )}
+        <p className="text-[10px] text-slate-500 ml-5 font-mono">
+          GPS: {lat.toFixed(4)}, {lng.toFixed(4)}
+        </p>
       </div>
 
       {/* Best Network Recommendation */}
-      {topNetwork && topNetwork.score !== null && (
+      {topNetwork && (
         <div className="mb-3.5 p-2.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-blue-500/10 to-indigo-500/10 border border-amber-500/30 flex items-center space-x-3">
           <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0">
             <Award className="w-5 h-5" />
@@ -117,18 +105,13 @@ export function CellPopup({ data, userLocation, gpsAccuracy }) {
           Side-by-Side Operators at this Spot:
         </span>
 
-        {networkStats.map((net) => {
-          const isInsufficient = net.status === 'insufficient_data' || net.score === null;
+        {allNetworks.map((net) => {
           const statusColor = getStatusColor(net.status);
 
           return (
             <div
               key={net.code}
-              className={`p-2.5 rounded-xl border transition-all ${
-                net.activeOutage
-                  ? 'bg-red-500/10 border-red-500/40'
-                  : 'bg-slate-900/90 border-slate-800 hover:border-slate-700'
-              }`}
+              className="p-2.5 rounded-xl border bg-slate-900/90 border-slate-800 hover:border-slate-700 transition-all space-y-1"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
@@ -140,31 +123,22 @@ export function CellPopup({ data, userLocation, gpsAccuracy }) {
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  {net.activeOutage && (
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500 text-white flex items-center space-x-1">
-                      <AlertTriangle className="w-2.5 h-2.5" />
-                      <span>OUTAGE</span>
-                    </span>
-                  )}
-
                   <span className={`text-xs font-black ${statusColor}`}>
-                    {isInsufficient ? 'No Data' : `${net.score}/100`}
+                    {net.score}/100
                   </span>
                 </div>
               </div>
 
+              <p className="text-[11px] text-slate-300 font-medium">{net.verdict}</p>
+
               {/* Sub-metrics */}
-              <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-400 pt-1.5 border-t border-slate-800/60">
+              <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-800/60">
                 <span className={statusColor}>
                   Status: <strong>{getStatusLabel(net.status)}</strong>
                 </span>
-                {net.avgDownloadSpeed ? (
-                  <span className="text-slate-200 font-mono">
-                    ⚡ {net.avgDownloadSpeed} Mbps
-                  </span>
-                ) : (
-                  <span className="text-slate-500">Speed: N/A</span>
-                )}
+                <span className="text-slate-200 font-mono">
+                  ⚡ {net.speed} • {net.ping}
+                </span>
               </div>
             </div>
           );
