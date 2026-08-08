@@ -8,7 +8,7 @@ import { MapFilters } from './MapFilters';
 import { CellPopup } from './CellPopup';
 import { useSocket } from '../../hooks/useSocket';
 import { Spinner } from '../common/Spinner';
-import { Navigation, Search, MapPin, LocateFixed, Compass, Radio, ShieldCheck, Crosshair, Loader2, Route, AlertCircle, Move, Terminal, RefreshCw, XCircle, Eye, Lock } from 'lucide-react';
+import { Navigation, Search, MapPin, LocateFixed, Compass, Radio, ShieldCheck, Crosshair, Loader2, Route, AlertCircle, Move, Terminal, RefreshCw, XCircle } from 'lucide-react';
 import { Button } from '../common/Button';
 import { getDistanceKm } from '../../utils/geo';
 import { useGeolocation, getAccuracyCategory } from '../../hooks/useGeolocation';
@@ -21,30 +21,30 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Modern Live GPS Pulsing Blue Dot Marker (Google Maps / Uber Style)
+// Modern Subtle Live GPS Blue Dot Marker (Softer, elegant pulse effect)
 const createLiveUserDotIcon = (heading = null) => {
   const rotationStyle = heading !== null && !isNaN(heading) ? `transform: rotate(${heading}deg);` : '';
   
   return L.divIcon({
     className: 'live-gps-user-marker-container',
     html: `
-      <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px;">
-        <!-- Pulsing Radar Wave Ring -->
-        <div style="position: absolute; width: 32px; height: 32px; border-radius: 9999px; background-color: rgba(59, 130, 246, 0.35);" class="animate-ping"></div>
-        <div style="position: absolute; width: 44px; height: 44px; border-radius: 9999px; background-color: rgba(59, 130, 246, 0.15);"></div>
+      <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px;">
+        <!-- Subtle Soft Pulsing Radar Ring -->
+        <div style="position: absolute; width: 28px; height: 28px; border-radius: 9999px; background-color: rgba(59, 130, 246, 0.20);" class="animate-ping"></div>
+        <div style="position: absolute; width: 36px; height: 36px; border-radius: 9999px; background-color: rgba(59, 130, 246, 0.08);"></div>
         <!-- Inner Core Blue Dot -->
-        <div style="position: relative; width: 22px; height: 22px; background-color: #2563eb; border: 3px solid #ffffff; border-radius: 9999px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center;">
+        <div style="position: relative; width: 18px; height: 18px; background-color: #2563eb; border: 2.5px solid #ffffff; border-radius: 9999px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35); display: flex; align-items: center; justify-content: center;">
           ${heading !== null && !isNaN(heading) ? `
-            <div style="${rotationStyle} color: white; font-size: 10px; font-weight: bold; line-height: 1;">▲</div>
+            <div style="${rotationStyle} color: white; font-size: 9px; font-weight: bold; line-height: 1;">▲</div>
           ` : `
-            <div style="width: 6px; height: 6px; background-color: #ffffff; border-radius: 9999px;"></div>
+            <div style="width: 5px; height: 5px; background-color: #ffffff; border-radius: 9999px;"></div>
           `}
         </div>
       </div>
     `,
-    iconSize: [44, 44],
-    iconAnchor: [22, 22],
-    popupAnchor: [0, -22]
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -18]
   });
 };
 
@@ -72,7 +72,7 @@ function MapEventsHandler({ onBoundsChange, isPinpointMode, onMapClick, onUserDr
   return null;
 }
 
-// Controller to programmatically fly/pan map smoothly when in Follow Mode
+// Controller to programmatically fly/pan map smoothly to street level zoom (Zoom 17)
 function MapFlyController({ flyToCoords, isFollowing }) {
   const map = useMap();
   const lastFlyCoordsRef = useRef(null);
@@ -82,7 +82,8 @@ function MapFlyController({ flyToCoords, isFollowing }) {
       const key = `${flyToCoords.lat.toFixed(5)},${flyToCoords.lng.toFixed(5)},${flyToCoords.zoom}`;
       if (lastFlyCoordsRef.current !== key) {
         lastFlyCoordsRef.current = key;
-        map.panTo([flyToCoords.lat, flyToCoords.lng], { animate: true, duration: 1.0 });
+        map.panTo([flyToCoords.lat, flyToCoords.lng], { animate: true, duration: 1.2 });
+        map.setZoom(flyToCoords.zoom || 17); // Zoom directly to close street level
       }
     }
   }, [flyToCoords, isFollowing, map]);
@@ -122,7 +123,7 @@ export function MapView() {
   } = useGeolocation();
 
   // Navigation & Follow Mode State
-  const [isFollowing, setIsFollowing] = useState(true); // Default follow mode enabled
+  const [isFollowing, setIsFollowing] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -130,7 +131,7 @@ export function MapView() {
   const [searchedDestination, setSearchedDestination] = useState(null);
   const [isPinpointMode, setIsPinpointMode] = useState(false);
   const [showDevPanel, setShowDevPanel] = useState(false);
-  const [, setTicker] = useState(0); // Ticker for relative timestamp update
+  const [, setTicker] = useState(0);
 
   // Address details state
   const [addressDetails, setAddressDetails] = useState({ landmark: 'Locating standing position...', district: '' });
@@ -152,13 +153,13 @@ export function MapView() {
     startTracking();
   }, [startTracking]);
 
-  // Update map coordinates whenever continuous watchPosition emits a new GPS location
+  // Immediately zoom in to user standing position on initial acquisition
   useEffect(() => {
     if (location && typeof location.latitude === 'number' && typeof location.longitude === 'number') {
       const { latitude, longitude } = location;
 
       if (isFollowing) {
-        setFlyToCoords({ lat: latitude, lng: longitude, zoom: 16 });
+        setFlyToCoords({ lat: latitude, lng: longitude, zoom: 17 }); // Deep street/suburb zoom
       }
 
       locationService.reverseGeocode(latitude, longitude).then((res) => {
@@ -222,11 +223,11 @@ export function MapView() {
     }
   };
 
-  // Recenter map on user standing location and re-enable Follow Mode
+  // Recenter map on user standing location at close street zoom (Zoom 17)
   const handleRecenterStandingLocation = () => {
     setIsFollowing(true);
     if (location && typeof location.latitude === 'number') {
-      setFlyToCoords({ lat: location.latitude, lng: location.longitude, zoom: 16 });
+      setFlyToCoords({ lat: location.latitude, lng: location.longitude, zoom: 17 });
     } else {
       requestLocation();
     }
@@ -592,7 +593,7 @@ export function MapView() {
 
       <MapContainer
         center={initialMapCenter}
-        zoom={location ? 16 : GHANA_DEFAULT_ZOOM}
+        zoom={location ? 17 : 16} // Start directly at close street level zoom
         className="w-full h-full"
         zoomControl={false}
       >
@@ -624,7 +625,7 @@ export function MapView() {
           />
         )}
 
-        {/* BROWSER GPS ACCURACY RADIUS CIRCLE (Scales with location.accuracy in meters) */}
+        {/* BROWSER GPS ACCURACY RADIUS CIRCLE */}
         {typeof location?.latitude === 'number' && !isNaN(location.latitude) && location.accuracy > 0 && (
           <Circle
             center={[location.latitude, location.longitude]}
@@ -632,13 +633,13 @@ export function MapView() {
             pathOptions={{
               color: '#4285F4',
               fillColor: '#4285F4',
-              fillOpacity: 0.15,
+              fillOpacity: 0.12,
               weight: 1.5,
             }}
           />
         )}
 
-        {/* MODERN LIVE GPS PULSING BLUE DOT USER MARKER (Google Maps / Uber Style) */}
+        {/* MODERN LIVE GPS BLUE DOT MARKER (Softer, elegant pulse effect) */}
         {typeof location?.latitude === 'number' && !isNaN(location.latitude) && (
           <Marker
             position={[location.latitude, location.longitude]}
