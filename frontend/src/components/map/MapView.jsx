@@ -30,6 +30,29 @@ const googleMapsBluePin = new L.Icon({
   shadowSize: [41, 41]
 });
 
+// Component to force Leaflet map size recalculation on mount and window resize
+function MapResizer() {
+  const map = useMap();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 250);
+
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [map]);
+
+  return null;
+}
+
 // Component to handle map clicks & bounds updates
 function MapEventsHandler({ onBoundsChange, isPinpointMode, onMapClick, onUserDrag }) {
   useMapEvents({
@@ -329,7 +352,10 @@ export function MapView() {
   const initialMapCenter = GHANA_CENTER;
 
   return (
-    <div className="relative w-full h-[calc(100vh-64px)] min-h-[500px] z-0 bg-slate-950">
+    <div 
+      className="relative w-full z-0 bg-slate-950 overflow-hidden"
+      style={{ height: 'calc(100vh - 64px)', minHeight: '550px' }}
+    >
       {/* Search Bar Container */}
       <div 
         className="absolute top-4 left-1/2 -translate-x-1/2 z-[2000] w-[92%] max-w-md pointer-events-auto"
@@ -566,12 +592,15 @@ export function MapView() {
 
       <MapContainer
         center={initialMapCenter}
-        zoom={location ? 16 : GHANA_DEFAULT_ZOOM}
-        className="w-full h-full"
+        zoom={8}
+        style={{ height: '100%', width: '100%' }}
         zoomControl={false}
       >
+        <MapResizer />
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          url="https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"
+          subdomains="abcd"
+          maxZoom={19}
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
         />
         <MapEventsHandler 
@@ -598,7 +627,7 @@ export function MapView() {
           />
         )}
 
-        {/* BROWSER GPS ACCURACY RADIUS CIRCLE (Scales with location.accuracy in meters) */}
+        {/* BROWSER GPS ACCURACY RADIUS CIRCLE */}
         {typeof location?.latitude === 'number' && !isNaN(location.latitude) && location.accuracy > 0 && (
           <Circle
             center={[location.latitude, location.longitude]}
@@ -606,7 +635,7 @@ export function MapView() {
             pathOptions={{
               color: '#4285F4',
               fillColor: '#4285F4',
-              fillOpacity: 0.15,
+              fillOpacity: 0.12,
               weight: 1.5,
             }}
           />

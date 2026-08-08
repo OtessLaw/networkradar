@@ -24,3 +24,20 @@ body {
   background: rgba(30, 41, 59, 0.8);
   border: 1px solid rgba(51, 65, 85, 0.5);
 }
+
+/* Guarantee Leaflet Map Container & Tile Layer Visibility */
+.leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  background-color: #090d16 !important;
+  z-index: 0;
+}
+
+.leaflet-tile-container img {
+  max-width: none !important;
+}
+
+.live-gps-user-marker-container {
+  background: transparent !important;
+  border: none !important;
+}
