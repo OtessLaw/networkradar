@@ -1,7 +1,19 @@
 import axios from 'axios';
 
+// Dynamically target Render backend in production (Vercel) and local server in dev
+const getBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return 'https://networkradar-backend.onrender.com/api';
+  }
+  return 'http://localhost:5005/api';
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5005/api'
+  baseURL: getBaseUrl(),
+  timeout: 15000,
 });
 
 // Attach JWT
@@ -15,11 +27,12 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   res => res,
   async err => {
-    if (err.response?.status === 401) {
+    if (err.response?.status === 401 && !err.config._retry) {
+      err.config._retry = true;
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
         try {
-          const { data } = await axios.post('/api/auth/refresh', { refreshToken });
+          const { data } = await axios.post(`${getBaseUrl()}/auth/refresh`, { refreshToken });
           localStorage.setItem('accessToken', data.accessToken);
           err.config.headers.Authorization = `Bearer ${data.accessToken}`;
           return api(err.config);
