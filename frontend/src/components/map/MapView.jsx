@@ -52,14 +52,22 @@ function MapEventsHandler({ onBoundsChange, isPinpointMode, onMapClick }) {
   return null;
 }
 
-// Controller to programmatically fly map smoothly
+// Controller to programmatically fly map smoothly without infinite refresh loops
 function MapFlyController({ flyToCoords }) {
   const map = useMap();
+  const lastFlyCoordsRef = useRef(null);
+
   useEffect(() => {
     if (flyToCoords && typeof flyToCoords.lat === 'number' && typeof flyToCoords.lng === 'number' && !isNaN(flyToCoords.lat) && !isNaN(flyToCoords.lng)) {
-      map.flyTo([flyToCoords.lat, flyToCoords.lng], flyToCoords.zoom || 16, { duration: 1.8 });
+      // Avoid re-flying to exact same coordinates to prevent map jitter/refresh loop
+      const key = `${flyToCoords.lat.toFixed(5)},${flyToCoords.lng.toFixed(5)},${flyToCoords.zoom}`;
+      if (lastFlyCoordsRef.current !== key) {
+        lastFlyCoordsRef.current = key;
+        map.flyTo([flyToCoords.lat, flyToCoords.lng], flyToCoords.zoom || 16, { duration: 1.5 });
+      }
     }
   }, [flyToCoords, map]);
+
   return null;
 }
 
@@ -68,7 +76,7 @@ export function MapView() {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ network: 'all', status: 'all' });
 
-  // Use Custom Production Geolocation Hook
+  // Custom Geolocation Hook
   const {
     location,
     ipLocation,
@@ -94,10 +102,12 @@ export function MapView() {
   const [showDevPanel, setShowDevPanel] = useState(false);
 
   // Address details state
-  const [addressDetails, setAddressDetails] = useState({ landmark: 'Locating...', district: '' });
+  const [addressDetails, setAddressDetails] = useState({ landmark: 'Locating standing position...', district: '' });
 
   const searchDebounceRef = useRef(null);
   const markerRef = useRef(null);
+  const hasFlownInitialRef = useRef(false);
+
   const { on } = useSocket();
 
   // Automatically start live tracking on mount
@@ -105,11 +115,16 @@ export function MapView() {
     startTracking();
   }, [startTracking]);
 
-  // When accurate location changes, perform reverse-geocoding and update map focus
+  // When location is first acquired, perform reverse geocoding and fly once
   useEffect(() => {
     if (location && typeof location.latitude === 'number' && typeof location.longitude === 'number') {
       const { latitude, longitude } = location;
-      setFlyToCoords({ lat: latitude, lng: longitude, zoom: 16 });
+
+      // Only fly map ONCE on initial acquisition to keep UI completely stable
+      if (!hasFlownInitialRef.current) {
+        hasFlownInitialRef.current = true;
+        setFlyToCoords({ lat: latitude, lng: longitude, zoom: 16 });
+      }
 
       locationService.reverseGeocode(latitude, longitude).then((res) => {
         setAddressDetails(res);
@@ -282,10 +297,9 @@ export function MapView() {
     ? Number(rawDist).toFixed(1)
     : null;
 
-  // Determine dynamic map center (No Osu Castle defaulting!)
   const initialMapCenter = location 
     ? [location.latitude, location.longitude] 
-    : GHANA_CENTER; // [7.95, -1.03] (National Geographic Center of Ghana)
+    : GHANA_CENTER;
 
   return (
     <div className="relative w-full h-[calc(100vh-64px)] min-h-[500px] z-0 bg-slate-950">
@@ -395,15 +409,15 @@ export function MapView() {
         </div>
       )}
 
-      {/* ACCURATE DEVICE LOCATION STATUS BANNER */}
+      {/* ACCURATE DEVICE LOCATION HEADER BANNER AT THE TOP */}
       {location && !searchedDestination && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[1000] bg-slate-950/95 text-white px-4 py-2.5 rounded-full shadow-2xl border border-slate-700 flex items-center space-x-2 text-xs font-extrabold backdrop-blur-md max-w-[92%] truncate">
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[1000] bg-slate-950/95 text-white px-5 py-2.5 rounded-full shadow-2xl border border-slate-700 flex items-center space-x-2.5 text-xs font-extrabold backdrop-blur-md max-w-[92%] truncate">
           <span className="flex items-center space-x-1 shrink-0">
-            <span className="text-sm">🟢</span>
-            <span className="text-emerald-400 font-bold uppercase tracking-wider text-[10px]">Precise device location</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="text-emerald-400 font-bold uppercase tracking-wider text-[10px]">Precise GPS</span>
           </span>
-          <span className="text-slate-500 font-normal">|</span>
-          <span className="truncate text-blue-300">📍 {addressDetails.landmark}</span>
+          <span className="text-slate-600 font-normal">|</span>
+          <span className="truncate text-blue-300 font-bold">📍 {addressDetails.landmark}</span>
           {accuracyDetails && (
             <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${accuracyDetails.bg} ${accuracyDetails.color} ${accuracyDetails.border} shrink-0`}>
               ±{location.accuracy}m
@@ -422,7 +436,7 @@ export function MapView() {
         </div>
       )}
 
-      {/* MAP FILTERS PANEL */}
+      {/* TOP-RIGHT COLLAPSIBLE OPEN & CLOSE FILTER BAR */}
       <MapFilters filters={filters} setFilters={setFilters} />
 
       {/* ACTION CONTROL BUTTONS */}
@@ -430,7 +444,7 @@ export function MapView() {
         {/* Recenter on Standing Location Button */}
         <Button
           variant="primary"
-          className="shadow-2xl rounded-full w-14 h-14 p-0 flex flex-col items-center justify-center bg-blue-600 hover:bg-blue-500 text-white border border-blue-400 shadow-blue-500/40"
+          className="shadow-2xl rounded-full w-14 h-14 p-0 flex flex-col items-center justify-center bg-blue-600 hover:bg-blue-500 text-white border border-blue-400 shadow-blue-500/40 cursor-pointer"
           onClick={handleRecenterStandingLocation}
           title="Recenter on my standing position"
         >
@@ -443,7 +457,7 @@ export function MapView() {
         {/* Manual Click Pinpoint Button */}
         <Button
           variant={isPinpointMode ? 'primary' : 'secondary'}
-          className={`shadow-2xl rounded-full w-14 h-14 p-0 flex flex-col items-center justify-center border transition-all ${
+          className={`shadow-2xl rounded-full w-14 h-14 p-0 flex flex-col items-center justify-center border transition-all cursor-pointer ${
             isPinpointMode
               ? 'bg-gradient-to-tr from-amber-500 to-orange-600 border-amber-300 text-white animate-bounce shadow-amber-500/50'
               : 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-amber-400'
@@ -460,7 +474,7 @@ export function MapView() {
         {/* Dev Diagnostics Toggle Button */}
         <Button
           variant="secondary"
-          className="shadow-2xl rounded-full w-10 h-10 p-0 flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-700"
+          className="shadow-2xl rounded-full w-10 h-10 p-0 flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-700 cursor-pointer"
           onClick={() => setShowDevPanel(!showDevPanel)}
           title="Toggle Location Diagnostics Panel"
         >
@@ -476,7 +490,7 @@ export function MapView() {
               <Terminal className="w-3.5 h-3.5" />
               <span>Location Diagnostics</span>
             </span>
-            <button onClick={() => setShowDevPanel(false)} className="text-slate-400 hover:text-white">✕</button>
+            <button onClick={() => setShowDevPanel(false)} className="text-slate-400 hover:text-white font-bold cursor-pointer">✕</button>
           </div>
 
           <div className="space-y-1">
@@ -547,7 +561,7 @@ export function MapView() {
           />
         )}
 
-        {/* BROWSER GPS ACCURACY RADIUS CIRCLE (Scales with location.accuracy in meters) */}
+        {/* BROWSER GPS ACCURACY RADIUS CIRCLE */}
         {typeof location?.latitude === 'number' && !isNaN(location.latitude) && location.accuracy > 0 && (
           <Circle
             center={[location.latitude, location.longitude]}
