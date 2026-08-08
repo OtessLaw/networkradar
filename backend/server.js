@@ -9,6 +9,7 @@ const healthWorker = require('./src/workers/healthWorker');
 const outageWorker = require('./src/workers/outageWorker');
 const alertWorker = require('./src/workers/alertWorker');
 const cleanupWorker = require('./src/workers/cleanupWorker');
+const startKeepAliveWorker = require('./src/workers/keepAliveWorker');
 
 let currentPort = Number(process.env.PORT) || 5005;
 
@@ -27,6 +28,7 @@ const startServer = async () => {
   outageWorker.start();
   alertWorker.start();
   cleanupWorker.start();
+  startKeepAliveWorker();
 
   // Handle port conflicts gracefully by trying next port
   server.on('error', (err) => {
