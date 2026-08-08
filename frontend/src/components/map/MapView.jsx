@@ -77,17 +77,25 @@ function MapEventsHandler({ onBoundsChange, isPinpointMode, onMapClick, onUserDr
   return null;
 }
 
-// Controller to programmatically pan map camera when following live movement
+// Controller to programmatically fly and zoom map camera to street level when following live movement
 function MapFlyController({ flyToCoords, isFollowing }) {
   const map = useMap();
   const lastFlyCoordsRef = useRef(null);
 
   useEffect(() => {
-    if (isFollowing && flyToCoords && typeof flyToCoords.lat === 'number' && typeof flyToCoords.lng === 'number' && !isNaN(flyToCoords.lat) && !isNaN(flyToCoords.lng)) {
-      const key = `${flyToCoords.lat.toFixed(4)},${flyToCoords.lng.toFixed(4)},${flyToCoords.zoom}`;
+    if (flyToCoords && typeof flyToCoords.lat === 'number' && typeof flyToCoords.lng === 'number' && !isNaN(flyToCoords.lat) && !isNaN(flyToCoords.lng)) {
+      const targetZoom = flyToCoords.zoom || 17;
+      const key = `${flyToCoords.lat.toFixed(4)},${flyToCoords.lng.toFixed(4)},${targetZoom}`;
+      
       if (lastFlyCoordsRef.current !== key) {
         lastFlyCoordsRef.current = key;
-        map.panTo([flyToCoords.lat, flyToCoords.lng], { animate: true, duration: 1.2 });
+        
+        // If map is currently zoomed out (e.g. country level Zoom 8), flyTo zooms in smoothly to street level
+        if (map.getZoom() !== targetZoom) {
+          map.flyTo([flyToCoords.lat, flyToCoords.lng], targetZoom, { animate: true, duration: 1.6 });
+        } else if (isFollowing) {
+          map.panTo([flyToCoords.lat, flyToCoords.lng], { animate: true, duration: 1.0 });
+        }
       }
     }
   }, [flyToCoords, isFollowing, map]);
@@ -154,7 +162,7 @@ export function MapView() {
     startTracking();
   }, [startTracking]);
 
-  // Update map coordinates ONLY when position changes by >100m to prevent state churn & blank screens
+  // Update map coordinates and zoom directly to street level (Zoom 17) when location arrives
   useEffect(() => {
     if (location && typeof location.latitude === 'number' && typeof location.longitude === 'number') {
       const { latitude, longitude } = location;
@@ -164,7 +172,7 @@ export function MapView() {
         lastFuzzedPosRef.current = key;
 
         if (isFollowing) {
-          setFlyToCoords({ lat: latitude, lng: longitude, zoom: 16 });
+          setFlyToCoords({ lat: latitude, lng: longitude, zoom: 17 }); // Direct street level zoom (Zoom 17)
         }
 
         locationService.reverseGeocode(latitude, longitude).then((res) => {
@@ -226,7 +234,7 @@ export function MapView() {
     }
   };
 
-  // Recenter map on user standing location and re-enable Follow Mode
+  // Recenter map on user standing location at close street level (Zoom 17) and re-enable Follow Mode
   const handleRecenterStandingLocation = () => {
     setIsFollowing(true);
     if (location && typeof location.latitude === 'number') {
