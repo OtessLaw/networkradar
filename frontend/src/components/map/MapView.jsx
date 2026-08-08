@@ -30,8 +30,8 @@ const createLiveUserDotIcon = (heading = null) => {
     html: `
       <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px;">
         <!-- Subtle Soft Pulsing Radar Ring -->
-        <div style="position: absolute; width: 28px; height: 28px; border-radius: 9999px; background-color: rgba(59, 130, 246, 0.20);" class="animate-ping"></div>
-        <div style="position: absolute; width: 36px; height: 36px; border-radius: 9999px; background-color: rgba(59, 130, 246, 0.08);"></div>
+        <div style="position: absolute; width: 28px; height: 28px; border-radius: 9999px; background-color: rgba(59, 130, 246, 0.25);" class="animate-ping"></div>
+        <div style="position: absolute; width: 36px; height: 36px; border-radius: 9999px; background-color: rgba(59, 130, 246, 0.10);"></div>
         <!-- Inner Core Blue Dot -->
         <div style="position: relative; width: 18px; height: 18px; background-color: #2563eb; border: 2.5px solid #ffffff; border-radius: 9999px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35); display: flex; align-items: center; justify-content: center;">
           ${heading !== null && !isNaN(heading) ? `
@@ -47,6 +47,29 @@ const createLiveUserDotIcon = (heading = null) => {
     popupAnchor: [0, -18]
   });
 };
+
+// Component to force Leaflet map size recalculation on mount and resize
+function MapResizer() {
+  const map = useMap();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 250);
+
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [map]);
+
+  return null;
+}
 
 // Component to handle map clicks, drag start, & bounds updates
 function MapEventsHandler({ onBoundsChange, isPinpointMode, onMapClick, onUserDrag }) {
@@ -596,9 +619,11 @@ export function MapView() {
         className="w-full h-full"
         zoomControl={false}
       >
+        <MapResizer />
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          maxZoom={19}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         <MapEventsHandler 
           onBoundsChange={fetchMapData} 
