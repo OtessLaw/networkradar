@@ -20,34 +20,17 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Modern Live GPS Blue Dot Marker (Google Maps / Uber Navigation Style)
-const createLiveUserDotIcon = (heading = null) => {
-  const rotationStyle = heading !== null && !isNaN(heading) ? `transform: rotate(${heading}deg);` : '';
-  
-  return L.divIcon({
-    className: 'live-gps-user-marker-container',
-    html: `
-      <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px;">
-        <!-- Subtle Soft Pulsing Radar Ring -->
-        <div style="position: absolute; width: 26px; height: 26px; border-radius: 9999px; background-color: rgba(59, 130, 246, 0.30);" class="animate-ping"></div>
-        <div style="position: absolute; width: 36px; height: 36px; border-radius: 9999px; background-color: rgba(59, 130, 246, 0.12);"></div>
-        <!-- Inner Core Blue Dot -->
-        <div style="position: relative; width: 18px; height: 18px; background-color: #2563eb; border: 2.5px solid #ffffff; border-radius: 9999px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center;">
-          ${heading !== null && !isNaN(heading) ? `
-            <div style="${rotationStyle} color: white; font-size: 9px; font-weight: bold; line-height: 1;">▲</div>
-          ` : `
-            <div style="width: 5px; height: 5px; background-color: #ffffff; border-radius: 9999px;"></div>
-          `}
-        </div>
-      </div>
-    `,
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-    popupAnchor: [0, -18]
-  });
-};
+// Signature Google Maps Blue Pin Icon
+const googleMapsBluePin = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [32, 50],
+  iconAnchor: [16, 50],
+  popupAnchor: [1, -40],
+  shadowSize: [41, 41]
+});
 
-// Component to handle map clicks, drag start, & bounds updates
+// Component to handle map clicks & bounds updates
 function MapEventsHandler({ onBoundsChange, isPinpointMode, onMapClick, onUserDrag }) {
   useMapEvents({
     moveend: (e) => {
@@ -78,7 +61,7 @@ function MapFlyController({ flyToCoords, isFollowing }) {
 
   useEffect(() => {
     if (isFollowing && flyToCoords && typeof flyToCoords.lat === 'number' && typeof flyToCoords.lng === 'number' && !isNaN(flyToCoords.lat) && !isNaN(flyToCoords.lng)) {
-      const key = `${flyToCoords.lat.toFixed(5)},${flyToCoords.lng.toFixed(5)},${flyToCoords.zoom}`;
+      const key = `${flyToCoords.lat.toFixed(4)},${flyToCoords.lng.toFixed(4)},${flyToCoords.zoom}`;
       if (lastFlyCoordsRef.current !== key) {
         lastFlyCoordsRef.current = key;
         map.panTo([flyToCoords.lat, flyToCoords.lng], { animate: true, duration: 1.2 });
@@ -132,6 +115,7 @@ export function MapView() {
 
   const searchDebounceRef = useRef(null);
   const markerRef = useRef(null);
+  const lastFuzzedPosRef = useRef(null);
   const { on } = useSocket();
 
   // Refresh relative timestamp ticker every 3 seconds
@@ -147,18 +131,23 @@ export function MapView() {
     startTracking();
   }, [startTracking]);
 
-  // Update map coordinates whenever continuous watchPosition emits a new GPS location
+  // Update map coordinates ONLY when position changes by >100m to prevent state churn & blank screens
   useEffect(() => {
     if (location && typeof location.latitude === 'number' && typeof location.longitude === 'number') {
       const { latitude, longitude } = location;
+      const key = `${latitude.toFixed(3)},${longitude.toFixed(3)}`;
 
-      if (isFollowing) {
-        setFlyToCoords({ lat: latitude, lng: longitude, zoom: 16 });
+      if (lastFuzzedPosRef.current !== key) {
+        lastFuzzedPosRef.current = key;
+
+        if (isFollowing) {
+          setFlyToCoords({ lat: latitude, lng: longitude, zoom: 16 });
+        }
+
+        locationService.reverseGeocode(latitude, longitude).then((res) => {
+          setAddressDetails(res);
+        });
       }
-
-      locationService.reverseGeocode(latitude, longitude).then((res) => {
-        setAddressDetails(res);
-      });
     }
   }, [location, isFollowing]);
 
@@ -623,11 +612,11 @@ export function MapView() {
           />
         )}
 
-        {/* MODERN LIVE GPS PULSING BLUE DOT MARKER (Google Maps / Uber Navigation Style) */}
+        {/* GOOGLE MAPS SIGNATURE BLUE STANDING LOCATION DOT */}
         {typeof location?.latitude === 'number' && !isNaN(location.latitude) && (
           <Marker
             position={[location.latitude, location.longitude]}
-            icon={createLiveUserDotIcon(location.heading)}
+            icon={googleMapsBluePin}
             draggable={true}
             ref={markerRef}
             eventHandlers={{
@@ -645,7 +634,7 @@ export function MapView() {
                 userLocation={true}
                 gpsAccuracy={location.accuracy}
                 data={{
-                  landmark: `${addressDetails.landmark} (Your Live Location)`,
+                  landmark: `${addressDetails.landmark} (Your Standing Location)`,
                   suburb: addressDetails.suburb,
                   district: addressDetails.district,
                   approximateLat: location.latitude,
@@ -733,10 +722,6 @@ export function MapView() {
         }
         .leaflet-popup-content {
           margin: 0;
-        }
-        .live-gps-user-marker-container {
-          background: transparent;
-          border: none;
         }
       `}</style>
     </div>
