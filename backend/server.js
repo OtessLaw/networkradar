@@ -28,13 +28,16 @@ const ensureAdminUser = async () => {
       console.log('✅ Seeded default networks (MTN, Telecel, AT)');
     }
 
-    // 2. Ensure Admin User
-    let admin = await User.findOne({ email: 'admin@networkradar.gh' });
+    // 2. Ensure Admin User with stable password hashing
+    const adminEmail = 'admin@networkradar.gh';
+    const plainPassword = 'Admin@123!';
+
+    let admin = await User.findOne({ email: adminEmail });
     if (!admin) {
       admin = new User({
         name: 'NetworkRadar Admin',
-        email: 'admin@networkradar.gh',
-        password: 'Admin@123!',
+        email: adminEmail,
+        password: plainPassword,
         role: 'admin',
         reputation: 'trusted',
         trustWeight: 1.0,
@@ -44,11 +47,16 @@ const ensureAdminUser = async () => {
       await admin.save();
       console.log('✅ Admin user created: admin@networkradar.gh / Admin@123!');
     } else {
-      admin.password = 'Admin@123!';
-      admin.role = 'admin';
-      admin.isActive = true;
-      await admin.save();
-      console.log('✅ Admin user verified & updated: admin@networkradar.gh');
+      const isMatch = await admin.comparePassword(plainPassword);
+      if (!isMatch) {
+        admin.password = plainPassword;
+        admin.role = 'admin';
+        admin.isActive = true;
+        await admin.save();
+        console.log('✅ Admin user password updated to: Admin@123!');
+      } else {
+        console.log('✅ Admin user verified: admin@networkradar.gh');
+      }
     }
   } catch (err) {
     console.warn('Admin initialization note:', err.message);

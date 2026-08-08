@@ -4,13 +4,14 @@ const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = requir
 exports.register = async (req, res, next) => {
   try {
     const { name, email, password, phone } = req.body;
+    const cleanEmail = (email || '').trim().toLowerCase();
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: cleanEmail });
     if (existingUser) {
       return res.status(409).json({ error: 'User with this email already exists' });
     }
 
-    const user = new User({ name, email, password, phone });
+    const user = new User({ name, email: cleanEmail, password, phone });
     user.refreshTrust();
 
     const accessToken = generateAccessToken(user._id, user.role);
@@ -37,10 +38,15 @@ exports.register = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    const cleanEmail = (email || '').trim().toLowerCase();
 
-    const user = await User.findOne({ email });
-    if (!user || !user.isActive) {
+    const user = await User.findOne({ email: cleanEmail });
+    if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    if (user.isActive === false) {
+      return res.status(403).json({ error: 'Account is deactivated' });
     }
 
     const isMatch = await user.comparePassword(password);
@@ -54,6 +60,9 @@ exports.login = async (req, res, next) => {
     const refreshToken = generateRefreshToken(user._id);
 
     // Keep max 5 refresh tokens
+    if (!Array.isArray(user.refreshTokens)) {
+      user.refreshTokens = [];
+    }
     if (user.refreshTokens.length >= 5) {
       user.refreshTokens.shift();
     }
