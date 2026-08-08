@@ -1,17 +1,17 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Circle, Marker, Popup, Polyline, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { GHANA_CENTER, GHANA_DEFAULT_ZOOM, GHANA_BOUNDS } from '../../constants/ghana';
+import { GHANA_CENTER, GHANA_BOUNDS } from '../../constants/ghana';
 import { locationService } from '../../services/location.service';
 import { MapFilters } from './MapFilters';
 import { CellPopup } from './CellPopup';
 import { useSocket } from '../../hooks/useSocket';
 import { Spinner } from '../common/Spinner';
-import { Navigation, Search, MapPin, LocateFixed, Compass, Radio, ShieldCheck, Crosshair, Loader2, Route, AlertCircle, Move, Terminal, RefreshCw, XCircle } from 'lucide-react';
+import { Search, MapPin, LocateFixed, Crosshair, Loader2, Route, Move, Terminal, RefreshCw, XCircle } from 'lucide-react';
 import { Button } from '../common/Button';
 import { getDistanceKm } from '../../utils/geo';
-import { useGeolocation, getAccuracyCategory } from '../../hooks/useGeolocation';
+import { useGeolocation } from '../../hooks/useGeolocation';
 
 // Fix Leaflet marker icon asset paths
 delete L.Icon.Default.prototype._getIconUrl;
@@ -103,7 +103,7 @@ function getRelativeTimeString(timestamp) {
 
 export function MapView() {
   const [cells, setCells] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Non-blocking cell loading indicator
   const [filters, setFilters] = useState({ network: 'all', status: 'all' });
 
   // Custom Geolocation Hook
@@ -113,12 +113,9 @@ export function MapView() {
     loading: geoLoading,
     error: geoError,
     permission: geoPermission,
-    accuracy: geoAccuracy,
     accuracyDetails,
-    isTracking,
     requestLocation,
     startTracking,
-    stopTracking,
     refreshLocation
   } = useGeolocation();
 
@@ -168,7 +165,7 @@ export function MapView() {
     }
   }, [location, isFollowing]);
 
-  const fetchMapData = async (bounds) => {
+  const fetchMapData = useCallback(async (bounds) => {
     try {
       setLoading(true);
       const params = bounds || {
@@ -182,11 +179,11 @@ export function MapView() {
       const res = await locationService.getMapData(params);
       setCells(res.data?.cells || []);
     } catch (err) {
-      console.error('Failed to load map data:', err);
+      console.warn('Map cell data fetch note:', err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters.network]);
 
   useEffect(() => {
     fetchMapData();
@@ -206,7 +203,7 @@ export function MapView() {
     return () => {
       offScore?.();
     };
-  }, [filters.network]);
+  }, [fetchMapData, on]);
 
   // Manual pinpoint positioning
   const handleManualPinpoint = async (lat, lng) => {
@@ -585,15 +582,17 @@ export function MapView() {
         </div>
       )}
 
+      {/* NON-BLOCKING BOTTOM-LEFT REFRESH SPINNER BADGE */}
       {loading && (
-        <div className="absolute inset-0 z-[500] flex items-center justify-center bg-slate-950/60 backdrop-blur-sm">
-          <Spinner size="lg" />
+        <div className="absolute bottom-6 left-6 z-[1000] bg-slate-900/90 text-blue-300 px-3 py-1.5 rounded-full border border-blue-500/30 text-xs font-semibold flex items-center space-x-2 backdrop-blur-md">
+          <Spinner size="sm" />
+          <span>Updating map signals...</span>
         </div>
       )}
 
       <MapContainer
         center={initialMapCenter}
-        zoom={location ? 17 : 16} // Start directly at close street level zoom
+        zoom={location ? 17 : 16}
         className="w-full h-full"
         zoomControl={false}
       >

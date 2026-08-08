@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Filter, ChevronDown, ChevronUp, Check, SlidersHorizontal } from 'lucide-react';
+import { Filter, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
 import { NETWORKS } from '../../constants/networks';
 
 export function MapFilters({ filters, setFilters }) {
@@ -58,7 +58,7 @@ export function MapFilters({ filters, setFilters }) {
             <div className="grid grid-cols-2 gap-1.5">
               <button
                 onClick={() => setFilters({ ...filters, network: 'all' })}
-                className={`py-1.5 px-2 rounded-xl text-xs font-bold border transition-all text-center ${
+                className={`py-1.5 px-2 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer ${
                   filters.network === 'all'
                     ? 'bg-blue-600 border-blue-400 text-white shadow-lg'
                     : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
@@ -73,7 +73,7 @@ export function MapFilters({ filters, setFilters }) {
                   <button
                     key={n.code}
                     onClick={() => setFilters({ ...filters, network: n.code })}
-                    className={`py-1.5 px-2 rounded-xl text-xs font-bold border transition-all flex items-center justify-center space-x-1.5 ${
+                    className={`py-1.5 px-2 rounded-xl text-xs font-bold border transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
                       isSelected
                         ? 'bg-slate-800 border-slate-600 text-white shadow-lg'
                         : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white'
@@ -102,7 +102,7 @@ export function MapFilters({ filters, setFilters }) {
                   <button
                     key={s.value}
                     onClick={() => setFilters({ ...filters, status: s.value })}
-                    className={`py-1 px-2.5 rounded-lg text-xs font-semibold border transition-all ${
+                    className={`py-1 px-2.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                       isSelected
                         ? 'bg-blue-500/20 border-blue-400 text-white font-bold'
                         : 'bg-slate-900/90 border-slate-800 text-slate-400 hover:bg-slate-800'
