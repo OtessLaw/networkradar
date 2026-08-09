@@ -1,10 +1,21 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Award, Zap, AlertTriangle, MapPin, Crosshair } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import L from 'leaflet';
 import { getStatusLabel, getStatusColor } from '../../utils/score';
 import { getAreaNetworkIntelligence } from '../../utils/geo';
 
 export function CellPopup({ data, userLocation, gpsAccuracy }) {
+  const containerRef = useRef(null);
+
+  // Prevent Leaflet map from capturing wheel/drag/touch scroll events on the operator card
+  useEffect(() => {
+    if (containerRef.current) {
+      L.DomEvent.disableScrollPropagation(containerRef.current);
+      L.DomEvent.disableClickPropagation(containerRef.current);
+    }
+  }, []);
+
   if (!data) return null;
 
   const lat = data.approximateLat || (userLocation ? userLocation.latitude : 5.6037);
@@ -52,7 +63,13 @@ export function CellPopup({ data, userLocation, gpsAccuracy }) {
   const topNetwork = ranked[0];
 
   return (
-    <div className="p-4 w-[320px] sm:w-[360px] bg-slate-950 text-slate-100 rounded-2xl shadow-2xl border border-slate-800 backdrop-blur-xl">
+    <div
+      ref={containerRef}
+      onWheel={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      className="p-4 w-[310px] sm:w-[360px] max-h-[78vh] overflow-y-auto custom-scrollbar bg-slate-950 text-slate-100 rounded-2xl shadow-2xl border border-slate-800 backdrop-blur-xl touch-pan-y pointer-events-auto"
+    >
       {/* Header with Location Detail */}
       <div className="border-b border-slate-800 pb-3 mb-3">
         <div className="flex items-center justify-between mb-1">
@@ -129,7 +146,7 @@ export function CellPopup({ data, userLocation, gpsAccuracy }) {
                 </div>
               </div>
 
-              <p className="text-[11px] text-slate-300 font-medium">{net.verdict}</p>
+              <p className="text-[11px] text-slate-300 font-medium leading-snug">{net.verdict}</p>
 
               {/* Sub-metrics */}
               <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-800/60">

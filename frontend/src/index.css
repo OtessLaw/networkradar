@@ -25,6 +25,40 @@ body {
   border: 1px solid rgba(51, 65, 85, 0.5);
 }
 
+/* Custom smooth dark scrollbar for popups, dropdowns & modals */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.8);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #0057B8;
+}
+
+/* Leaflet Popup Scrollability & Prevent Back-layer Map Dragging */
+.custom-popup .leaflet-popup-content-wrapper {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border: none !important;
+}
+.custom-popup .leaflet-popup-tip-container {
+  display: none !important;
+}
+.custom-popup .leaflet-popup-content {
+  margin: 0 !important;
+  width: auto !important;
+  max-height: 80vh !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
 /* Guarantee Leaflet Map Container & Tile Layer Visibility */
 .leaflet-container {
   width: 100% !important;
